@@ -1,5 +1,5 @@
 
-# NebulaDB 2.0
+# NebulaDB 
 
 NebulaDB is a lightweight C++ terminal-based user management system that mimics basic database functionality. 
 It allows user registration, secure password storage using SHA-256 hashing, and basic record management.
