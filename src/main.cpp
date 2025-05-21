@@ -199,24 +199,30 @@ class Table {
         }
 
         void sortByAge(bool ascending = true) {
-            if (records.empty()) {
-                cout << "No records to sort." << endl;
-                return;
-            }
-        
-            sort(records.begin(), records.end(), [ascending](const Record& a, const Record& b) {
-                int ageA = stoi(a.getFields()[1]); // Age is the second column (index 1)
-                int ageB = stoi(b.getFields()[1]);
-                
-                if (ascending) {
-                    return ageA < ageB;
-                } else {
-                    return ageA > ageB;
-                }
-            });
-        
-            cout << "Records sorted by Age " << (ascending ? "(Ascending)" : "(Descending)") << " successfully!" << endl;
+        if (records.empty()) {
+        cout << "No records to sort." << endl;
+        return;
         }
+
+        auto safeConvertAge = [](const std::string& ageStr, bool asc) -> int {
+        try {
+            return std::stoi(ageStr);
+          } catch (...) {
+            // Return a large/small value so invalid ages are pushed to end
+            return asc ? INT_MAX : INT_MIN;
+         }
+        };
+
+        std::sort(records.begin(), records.end(), [ascending, safeConvertAge](const Record& a, const Record& b) {
+        int ageA = safeConvertAge(a.getFields()[2], ascending);
+        int ageB = safeConvertAge(b.getFields()[2], ascending);
+
+        return ascending ? (ageA < ageB) : (ageA > ageB);
+        });
+
+        cout << "Records sorted by Age " << (ascending ? "(Ascending)" : "(Descending)") << " successfully!" << endl;
+        }
+
 
         void filterByCityAndAge(const string& cityName, int minAge) const {
             cout << "Users from city: " << cityName << " and age greater than " << minAge << endl;
@@ -435,27 +441,85 @@ int main() {
     }
 
     if (!currentUser.empty()) {
-        while (true) {
-            std::cout << "\n1. Add Record\n2. View Records\n3. Logout\n> ";
-            std::cin >> choice;
-            std::cin.ignore();
+    while (true) {
+        std::cout << "\nNebulaDB Menu\n";
+        std::cout << "1. Add Record\n";
+        std::cout << "2. View Records\n";
+        std::cout << "3. Update Record by Name\n";
+        std::cout << "4. Delete Record by Name\n";
+        std::cout << "5. Search Record by Name\n";
+        std::cout << "6. Save Table to File\n";
+        std::cout << "7. Load Table from File\n";
+        std::cout << "8. Sort Records by Age\n";
+        std::cout << "9. Filter Records by City and Age\n";
+        std::cout << "10. Logout\n> ";
+        std::cin >> choice;
+        std::cin.ignore();
 
-            if (choice == 1) {
-                std::string name, email, age;
-                std::cout << "Name: "; std::getline(std::cin, name);
-                std::cout << "Email: "; std::getline(std::cin, email);
-                std::cout << "Age: "; std::getline(std::cin, age);
-                table.insertRecord({name, email, age});
-            } else if (choice == 2) {
-                table.displayTable();
-            } else if (choice == 3) {
-                std::cout << "Logged out.\n";
-                break;
-            } else {
-                std::cout << "Invalid input.\n";
-            }
+        if (choice == 1) {
+            std::string name, email, age;
+            std::cout << "Name: "; std::getline(std::cin, name);
+            std::cout << "Email: "; std::getline(std::cin, email);
+            std::cout << "Age: "; std::getline(std::cin, age);
+            table.insertRecord({name, email, age});
+        } else if (choice == 2) {
+            table.displayTable();
+        } else if (choice == 3) {
+            std::string name;
+            std::cout << "Enter name of record to update: ";
+            std::getline(std::cin, name);
+
+            std::string newName, newEmail, newAge;
+            std::cout << "New Name: "; std::getline(std::cin, newName);
+            std::cout << "New Email: "; std::getline(std::cin, newEmail);
+            std::cout << "New Age: "; std::getline(std::cin, newAge);
+
+            table.updateRecordByName(name, {newName, newEmail, newAge});
+        } else if (choice == 4) {
+            std::string name;
+            std::cout << "Enter name of record to delete: ";
+            std::getline(std::cin, name);
+            table.deleteRecordByName(name);
+        } else if (choice == 5) {
+            std::string name;
+            std::cout << "Enter name to search: ";
+            std::getline(std::cin, name);
+            table.searchRecord(name);
+        } else if (choice == 6) {
+            std::string filename;
+            std::cout << "Enter filename to save to: ";
+            std::getline(std::cin, filename);
+            table.saveToFile(filename);
+        } else if (choice == 7) {
+            std::string filename;
+            std::cout << "Enter filename to load from: ";
+            std::getline(std::cin, filename);
+            table.loadFromFile(filename);
+        } else if (choice == 8) {
+            int sortChoice;
+            std::cout << "Sort by Age:\n1. Ascending\n2. Descending\n> ";
+            std::cin >> sortChoice;
+            std::cin.ignore();
+            table.sortByAge(sortChoice == 1);
+            table.displayTable();
+        } else if (choice == 9) {
+            std::string city;
+            int minAge;
+            std::cout << "Enter city name: ";
+            std::getline(std::cin, city);
+            std::cout << "Enter minimum age: ";
+            std::cin >> minAge;
+            std::cin.ignore();
+            table.filterByCityAndAge(city, minAge);
+        } else if (choice == 10) {
+            std::cout << "Logged out.\n";
+            break;
+        } else {
+            std::cout << "Invalid input.\n";
         }
     }
+}
+
 
     return 0;
 }
